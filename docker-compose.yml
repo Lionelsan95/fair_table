@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PORT: 3001
+      WEB_ORIGIN: http://localhost:${WEB_PORT:-8080}
+      USE_MOCK_PROVIDERS: ${USE_MOCK_PROVIDERS:-false}
+      GEOPLATFORM_AUTOCOMPLETE_BASE_URL: ${GEOPLATFORM_AUTOCOMPLETE_BASE_URL:-https://data.geopf.fr/geocodage/completion/}
+      GEOPLATFORM_ROUTING_BASE_URL: ${GEOPLATFORM_ROUTING_BASE_URL:-https://data.geopf.fr/navigation/itineraire}
+      OVERPASS_API_URL: ${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
+    restart: unless-stopped
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_DEFAULT_LOCALE: ${VITE_DEFAULT_LOCALE:-fr}
+        VITE_MAP_STYLE_URL: ${VITE_MAP_STYLE_URL:-https://tiles.openfreemap.org/styles/positron}
+    ports:
+      - '127.0.0.1:${WEB_PORT:-8080}:8080'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
